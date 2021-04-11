@@ -1,0 +1,123 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+### Intro to Data Science Project
+## Authors:
+
+
+```{r} 
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+```
+
+Downloading Data:
+
+```{r}
+Lunch_Data <- read.csv(url("https://raw.githubusercontent.com/ghosthunt274/FINAL-Project/main/Lunch%20Data%20WO%20Meals.csv"))
+```
+
+
+```{r}
+Dinner_Data <- read.csv(url("https://raw.githubusercontent.com/ghosthunt274/FINAL-Project/main/Dinner_Data_WO_Meals_CSV.csv"))
+```
+
+```{r}
+Lunch_meals <- read.csv(url("https://raw.githubusercontent.com/ghosthunt274/FINAL-Project/main/Lunch%20Meals%20All.csv"))
+```
+
+getting rid of weird columns in meals
+
+```{r}
+Lunch_meals <- Lunch_meals %>%
+                  select(1:3)
+```
+
+
+Changing the dates to a date format & renaming columns:
+
+
+
+```{r}
+Lunch_Data <- Lunch_Data%>%
+  rename(Date = ï..Date)
+
+Dinner_Data$Date <- as.Date(Dinner_Data$Date,format = "%d/%m/%Y" )
+
+Dinner_Data <- Dinner_Data %>%
+  rename(Very_Negative = Very.negative,
+         very_Positive = Very.positive)
+
+Lunch_Data$Date <- as.Date(Lunch_Data$Date,format = "%d/%m/%Y" )
+
+Lunch_Data <- Lunch_Data %>%
+  rename(Very_Negative = Very.negative,
+         very_Positive = Very.positive)
+
+Lunch_meals <- Lunch_meals %>%
+                rename(Action_Station = LUNCH.MEAL.ACTION.STATION,
+                       Chefs_Station = CHEFS.TABLE,
+                       Date = ï..DATE)
+
+```
+
+
+groups by day to give a total amount of votes for each day by rank of vote
+
+```{r}
+votes_by_day_lunch <- Lunch_Data %>%
+              group_by(Date) %>%
+              summarise(Very_Negative = sum(Very_Negative),Negative = sum(Negative),Positive = sum(Positive), very_Positive =    sum(very_Positive) ,Total= sum(Total))
+
+votes_by_day_dinner <- Dinner_Data %>%
+              group_by(Date) %>%
+              summarise(Very_Negative = sum(Very_Negative),Negative = sum(Negative),Positive = sum(Positive), very_Positive =    sum(very_Positive) ,Total= sum(Total))
+
+
+#IDK why this is 83 rows but the same amount of days??? 
+Lunch_meals
+```
+
+```{r}
+votes_by_day_lunch
+votes_by_day_dinner
+```
+
+combining the lunch and dinner data
+
+```{r}
+All_Meals <- rbind(Dinner_Data,Lunch_Data)
+```
+
+total votes by day of the week
+
+```{r}
+All_Meals %>%
+  group_by(Weekday)%>%
+  summarise(Total_VeryP = sum(very_Positive), Total_VeryN = sum(Very_Negative),Total_N = sum(Negative),Total_P=sum(Positive))
+  
+```
+Showing which day had the most votes
+
+```{r}
+Daily_Total_GG <- All_Meals %>%
+  group_by(Weekday)%>%
+  summarise(TotalReviews = sum(Total))
+
+x <- c("Sunday", "Monday","Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
+
+#making the weekday column and ordered list in normal weekday order
+Daily_Total_GG %>%
+  slice(match(x,Weekday))
+
+ggplot(Daily_Total_GG,aes(x= reorder(Weekday,-TotalReviews), y = TotalReviews)) +
+  geom_col()+
+  labs(title = "Weekday vs Total Reviews (Lunch and Dinner)",
+       x= "",
+       y= "Number of Reviews")
+```
+
+
+
